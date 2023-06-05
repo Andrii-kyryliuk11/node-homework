@@ -16,10 +16,10 @@ router.post(
 
 router.delete("/:id", contactsController.deleteContact);
 
-router.put(
-  "/:id",
-  validateBody(schemas.putSchema),
-  contactsController.updateContact
-);
+// router.put(
+//   "/:id",
+//   validateBody(schemas.putSchema),
+//   contactsController.updateContact
+// );
 
 module.exports = router;
