@@ -25,9 +25,17 @@ const putSchema = Joi.object({
   phone: Joi.number().optional().messages({
     "number.base": "phone must be a number",
   }),
+  favorite: Joi.boolean(),
 })
   .required()
   .min(1)
   .messages({ "object.min": "missing fields" });
 
-module.exports = { addSchema, putSchema };
+const patchSchema = Joi.object({
+  favorite: Joi.boolean().required().messages({
+    "any.required": "missing field favorite",
+    "boolean.base": "please,enter boolean",
+  }),
+});
+
+module.exports = { addSchema, putSchema, patchSchema };
