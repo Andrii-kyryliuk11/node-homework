@@ -13,16 +13,20 @@ const addSchema = Joi.object({
     "any.required": "missing required phone field",
     "number.base": "phone must be a number",
   }),
+  favorite: Joi.boolean(),
 });
 
 const putSchema = Joi.object({
-  name: Joi.string().optional().messages({
+  name: Joi.string().required().messages({
+    "any.required": "missing required name field",
     "string.base": "name must be a string",
   }),
-  email: Joi.string().optional().email().messages({
+  email: Joi.string().required().email().messages({
+    "any.required": "missing required email field",
     "string.email": "enter a valid email",
   }),
-  phone: Joi.number().optional().messages({
+  phone: Joi.number().required().messages({
+    "any.required": "missing required phone field",
     "number.base": "phone must be a number",
   }),
   favorite: Joi.boolean(),
