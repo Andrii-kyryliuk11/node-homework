@@ -25,7 +25,7 @@ const addContact = async (req, res, next) => {
 const deleteContact = async (req, res, next) => {
   const id = req.params.id;
   const result = await Contact.deleteOne({ _id: id });
-  if (!result) {
+  if (result.deletedCount === 0) {
     throw HttpError(404, "Not found");
   }
   res.status(200).json({ message: "contact deleted" });
@@ -34,9 +34,13 @@ const deleteContact = async (req, res, next) => {
 const updateContact = async (req, res, next) => {
   const id = req.params.id;
   const body = req.body;
+  if (!body) {
+    throw HttpError(400, "missing fields");
+  }
   const result = await Contact.findOneAndUpdate({ _id: id }, body, {
     new: true,
   });
+  console.log(result);
   if (!result) {
     throw HttpError(404, "Not found");
   }

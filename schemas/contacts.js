@@ -25,15 +25,13 @@ const putSchema = Joi.object({
     "any.required": "missing required email field",
     "string.email": "enter a valid email",
   }),
+
   phone: Joi.number().required().messages({
     "any.required": "missing required phone field",
     "number.base": "phone must be a number",
   }),
   favorite: Joi.boolean(),
-})
-  .required()
-  .min(1)
-  .messages({ "object.min": "missing fields" });
+});
 
 const patchSchema = Joi.object({
   favorite: Joi.boolean().required().messages({
@@ -42,4 +40,8 @@ const patchSchema = Joi.object({
   }),
 });
 
-module.exports = { addSchema, putSchema, patchSchema };
+const validateEmptyBodySchema = Joi.object()
+  .min(1)
+  .messages({ "object.min": "missing fields" });
+
+module.exports = { addSchema, putSchema, patchSchema, validateEmptyBodySchema };
