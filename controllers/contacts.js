@@ -3,7 +3,12 @@ const Contact = require("../models/contacts");
 const wrapper = require("../decorators/wrapper");
 
 const getAll = async (req, res, next) => {
-  const data = await Contact.find();
+  const { _id: owner } = req.user;
+  const { page = 1, limit = 20, ...query } = req.params;
+  const skip = (page - 1) * limit;
+  console.log(skip);
+  console.log(limit);
+  const data = await Contact.find({ owner, ...query }, "-id", { skip, limit });
   res.json(data);
 };
 
@@ -17,8 +22,9 @@ const getById = async (req, res, next) => {
 };
 
 const addContact = async (req, res, next) => {
+  const { _id: owner } = req.user;
   const body = req.body;
-  const data = await Contact.create(body);
+  const data = await Contact.create({ ...body, owner });
   res.status(201).json(data);
 };
 

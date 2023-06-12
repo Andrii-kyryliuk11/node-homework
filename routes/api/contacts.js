@@ -4,6 +4,9 @@ const contactsController = require("../../controllers/contacts");
 const { validateBody } = require("../../middlewares/validateBody");
 const schemas = require("../../schemas/contacts");
 const isValidId = require("../../middlewares/isValidId");
+const validateToken = require("../../middlewares/validateToken");
+
+router.use(validateToken);
 
 router.get("/", contactsController.getAll);
 
@@ -27,7 +30,6 @@ router.put(
 router.patch(
   "/:id/favorite",
   isValidId,
-
   validateBody(schemas.patchSchema),
   contactsController.updateStatusContact
 );
