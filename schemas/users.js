@@ -1,5 +1,5 @@
 const Joi = require("joi");
-const { emailRegexp } = require("../constants/users");
+const { emailRegexp, subscriptionTypes } = require("../constants/users");
 
 const userRegisterSchema = Joi.object({
   email: Joi.string().pattern(emailRegexp).required().messages({
@@ -12,6 +12,16 @@ const userRegisterSchema = Joi.object({
   }),
 });
 
+const userUpdateSchema = Joi.object({
+  subscription: Joi.string()
+    .valid(...subscriptionTypes)
+    .required()
+    .messages({
+      "any.required": "missing required subscription field",
+      "any.only": "wrong subscription type",
+    }),
+});
 module.exports = {
   userRegisterSchema,
+  userUpdateSchema,
 };

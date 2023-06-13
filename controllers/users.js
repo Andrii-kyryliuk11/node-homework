@@ -1,6 +1,6 @@
 // const HttpError = require("../helpers/HttpError");
 const wrapper = require("../decorators/wrapper");
-const User = require("../models/user");
+const Users = require("../models/user");
 const HttpError = require("../helpers/HttpError");
 const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
@@ -8,12 +8,12 @@ const { SECRET_KEY } = process.env;
 
 const register = async (req, res, next) => {
   const { email, password } = req.body;
-  const user = await User.findOne({ email });
+  const user = await Users.findOne({ email });
   if (user) {
     throw HttpError(409, "Email in use");
   }
   const hashedPassword = await bcrypt.hash(password, 8);
-  const newUser = await User.create({ ...req.body, password: hashedPassword });
+  const newUser = await Users.create({ ...req.body, password: hashedPassword });
 
   res.status(201).json({
     user: { email: newUser.email, subscription: newUser.subscription },
@@ -22,7 +22,7 @@ const register = async (req, res, next) => {
 
 const login = async (req, res, next) => {
   const { email, password } = req.body;
-  const user = await User.findOne({ email });
+  const user = await Users.findOne({ email });
   if (!user) {
     throw HttpError(401, "Email or password is wrong");
   }
@@ -34,20 +34,41 @@ const login = async (req, res, next) => {
 
   const payload = { id };
   const token = jwt.sign(payload, SECRET_KEY, { expiresIn: "5h" });
-  await User.findByIdAndUpdate(id, { token });
+  await Users.findByIdAndUpdate(id, { token });
   res.json({
     token: token,
     user: { email: user.email, subscription: user.subscription },
   });
 };
 
+const logout = async (req, res, next) => {
+  const { _id: id } = req.user;
+  await Users.findByIdAndUpdate(id, { token: "" });
+  res.status(204).end();
+};
+
 const getCurrentUser = async (req, res, next) => {
   const user = req.user;
   res.json({ user: { email: user.email, subscription: user.subscription } });
+};
+const updateStatus = async (req, res) => {
+  const { _id: id } = req.user;
+  console.log(req.body.subscription);
+  const updatedUser = await Users.findByIdAndUpdate(
+    id,
+    {
+      $set: { subscription: req.body.subscription },
+    },
+    { returnDocument: "after" }
+  );
+
+  res.status(200).json(updatedUser.subscription);
 };
 
 module.exports = {
   register: wrapper(register),
   login: wrapper(login),
   getCurrentUser: wrapper(getCurrentUser),
+  logout: wrapper(logout),
+  updateStatus: wrapper(updateStatus),
 };
