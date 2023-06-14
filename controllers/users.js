@@ -49,7 +49,7 @@ const logout = async (req, res, next) => {
 
 const getCurrentUser = async (req, res, next) => {
   const user = req.user;
-  res.json({ user: { email: user.email, subscription: user.subscription } });
+  res.json({ email: user.email, subscription: user.subscription } );
 };
 const updateStatus = async (req, res) => {
   const { _id: id } = req.user;
