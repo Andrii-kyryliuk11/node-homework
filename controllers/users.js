@@ -1,19 +1,27 @@
-// const HttpError = require("../helpers/HttpError");
+const path = require("path");
 const wrapper = require("../decorators/wrapper");
 const Users = require("../models/user");
 const HttpError = require("../helpers/HttpError");
 const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
 const { SECRET_KEY } = process.env;
+const gravatar = require("gravatar");
+const jimp = require("jimp");
 
 const register = async (req, res, next) => {
   const { email, password } = req.body;
   const user = await Users.findOne({ email });
+  const avatar = gravatar.url(email);
+  console.log(avatar);
   if (user) {
     throw HttpError(409, "Email in use");
   }
   const hashedPassword = await bcrypt.hash(password, 8);
-  const newUser = await Users.create({ ...req.body, password: hashedPassword });
+  const newUser = await Users.create({
+    ...req.body,
+    avatarURL: avatar,
+    password: hashedPassword,
+  });
 
   res.status(201).json({
     user: { email: newUser.email, subscription: newUser.subscription },
@@ -49,11 +57,11 @@ const logout = async (req, res, next) => {
 
 const getCurrentUser = async (req, res, next) => {
   const user = req.user;
-  res.json({ email: user.email, subscription: user.subscription } );
+  res.json({ email: user.email, subscription: user.subscription });
 };
 const updateStatus = async (req, res) => {
   const { _id: id } = req.user;
-  console.log(req.body.subscription);
+
   const updatedUser = await Users.findByIdAndUpdate(
     id,
     {
@@ -65,10 +73,23 @@ const updateStatus = async (req, res) => {
   res.status(200).json(updatedUser.subscription);
 };
 
+const changeAvatar = async (req, res) => {
+  const destination = path.join(
+    path.resolve("public/avatars"),
+    req.file.filename
+  );
+  jimp.read(req.file.path, (err, img) => {
+    if (err) throw err;
+    img.resize(250, 250).write(destination);
+  });
+  res.json({ avatarURL: destination });
+};
+
 module.exports = {
   register: wrapper(register),
   login: wrapper(login),
   getCurrentUser: wrapper(getCurrentUser),
   logout: wrapper(logout),
   updateStatus: wrapper(updateStatus),
+  changeAvatar: wrapper(changeAvatar),
 };
