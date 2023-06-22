@@ -1,4 +1,5 @@
 const path = require("path");
+const fs = require("fs/promises");
 const wrapper = require("../decorators/wrapper");
 const Users = require("../models/user");
 const HttpError = require("../helpers/HttpError");
@@ -61,7 +62,6 @@ const getCurrentUser = async (req, res, next) => {
 };
 const updateStatus = async (req, res) => {
   const { _id: id } = req.user;
-
   const updatedUser = await Users.findByIdAndUpdate(
     id,
     {
@@ -80,9 +80,14 @@ const changeAvatar = async (req, res) => {
   );
   jimp.read(req.file.path, (err, img) => {
     if (err) throw err;
-    img.resize(250, 250).write(destination);
+    img.resize(250, 250);
   });
-  res.json({ avatarURL: destination });
+  fs.rename(req.file.path, destination);
+  const { _id: id } = req.user;
+  await Users.findByIdAndUpdate(id, {
+    avatarURL: `avatars/${req.file.filename}`,
+  });
+  res.json({ avatarURL: `avatars/${req.file.filename}` });
 };
 
 module.exports = {
