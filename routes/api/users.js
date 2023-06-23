@@ -3,6 +3,7 @@ const router = express.Router();
 const userController = require("../../controllers/users");
 const { validateBody } = require("../../middlewares/validateBody");
 const validateToken = require("../../middlewares/validateToken");
+const upload = require("../../middlewares/upload");
 
 const schemas = require("../../schemas/users");
 
@@ -27,5 +28,12 @@ router.patch(
   validateToken,
   validateBody(schemas.userUpdateSchema),
   userController.updateStatus
+);
+
+router.patch(
+  "/avatars",
+  validateToken,
+  upload.single("avatar"),
+  userController.changeAvatar
 );
 module.exports = router;
