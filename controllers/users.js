@@ -78,11 +78,15 @@ const changeAvatar = async (req, res) => {
     path.resolve("public/avatars"),
     req.file.filename
   );
-  jimp.read(req.file.path, (err, img) => {
-    if (err) throw err;
-    img.resize(250, 250);
-  });
-  fs.rename(req.file.path, destination);
+  await jimp
+    .read(req.file.path)
+    .then((img) => {
+      return img.resize(250, 250).write(req.file.path);
+    })
+    .catch((err) => {
+      console.error(err);
+    });
+  await fs.rename(req.file.path, destination);
   const { _id: id } = req.user;
   await Users.findByIdAndUpdate(id, {
     avatarURL: `avatars/${req.file.filename}`,
