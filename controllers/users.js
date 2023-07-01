@@ -21,7 +21,6 @@ const register = async (req, res, next) => {
   }
   const hashedPassword = await bcrypt.hash(password, 8);
   const verificationToken = nanoid();
-  console.log(verificationToken);
   const newUser = await Users.create({
     ...req.body,
     avatarURL: avatar,
@@ -43,6 +42,9 @@ const login = async (req, res, next) => {
   const comparePassword = await bcrypt.compare(password, user.password);
   if (!comparePassword) {
     throw HttpError(401, "Email or password is wrong");
+  }
+  if (user.verify === false) {
+    throw HttpError(401, "Email not confirmed");
   }
   const { _id: id } = user;
 
@@ -99,10 +101,32 @@ const changeAvatar = async (req, res) => {
   res.json({ avatarURL: `avatars/${req.file.filename}` });
 };
 
-const verifyToken = async (req, res) => {
-  console.log(req.params);
+const verifyEmail = async (req, res) => {
+  const { verificationToken } = req.params;
+  const userToCheck = await Users.findOne({ verificationToken });
+  if (!userToCheck) {
+    throw HttpError(404, "User not found");
+  }
+  const { _id } = userToCheck;
+  await Users.findByIdAndUpdate(_id, { verificationToken: null, verify: true });
+  res.json({ message: "Verification successful" });
 };
 
+const resendEmail = async (req, res) => {
+  const { email } = req.body;
+  const user = await Users.findOne({ email });
+  if (!user) {
+    throw HttpError(404, "Email not found");
+  }
+  if (user.verify === true) {
+    throw HttpError(400, "Verification has already been passed");
+  }
+  const { verificationToken } = user;
+  createEmail(email, verificationToken);
+  res.status(200).json({
+    message: "Verification email sent",
+  });
+};
 module.exports = {
   register: wrapper(register),
   login: wrapper(login),
@@ -110,5 +134,6 @@ module.exports = {
   logout: wrapper(logout),
   updateStatus: wrapper(updateStatus),
   changeAvatar: wrapper(changeAvatar),
-  verifyToken: wrapper(verifyToken),
+  verifyEmail: wrapper(verifyEmail),
+  resendEmail: wrapper(resendEmail),
 };
