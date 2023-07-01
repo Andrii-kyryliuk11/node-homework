@@ -8,22 +8,27 @@ const jwt = require("jsonwebtoken");
 const { SECRET_KEY } = process.env;
 const gravatar = require("gravatar");
 const jimp = require("jimp");
+const { nanoid } = require("nanoid");
+const createEmail = require("../helpers/emailVerification");
 
 const register = async (req, res, next) => {
   const { email, password } = req.body;
   const user = await Users.findOne({ email });
   const avatar = gravatar.url(email);
-  console.log(avatar);
+
   if (user) {
     throw HttpError(409, "Email in use");
   }
   const hashedPassword = await bcrypt.hash(password, 8);
+  const verificationToken = nanoid();
+  console.log(verificationToken);
   const newUser = await Users.create({
     ...req.body,
     avatarURL: avatar,
     password: hashedPassword,
+    verificationToken,
   });
-
+  createEmail(email, verificationToken);
   res.status(201).json({
     user: { email: newUser.email, subscription: newUser.subscription },
   });
@@ -94,6 +99,10 @@ const changeAvatar = async (req, res) => {
   res.json({ avatarURL: `avatars/${req.file.filename}` });
 };
 
+const verifyToken = async (req, res) => {
+  console.log(req.params);
+};
+
 module.exports = {
   register: wrapper(register),
   login: wrapper(login),
@@ -101,4 +110,5 @@ module.exports = {
   logout: wrapper(logout),
   updateStatus: wrapper(updateStatus),
   changeAvatar: wrapper(changeAvatar),
+  verifyToken: wrapper(verifyToken),
 };
